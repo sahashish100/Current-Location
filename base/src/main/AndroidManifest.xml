@@ -28,7 +28,7 @@
         <service
             android:name="com.example.android.whileinuselocation.ForegroundOnlyLocationService"
             android:enabled="true"
-            android:exported="false"
+            android:exported="true"
             android:foregroundServiceType="location" />
     </application>
 

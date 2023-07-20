@@ -1,18 +1,3 @@
-/*
- * Copyright 2019 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.example.android.whileinuselocation
 
 import android.Manifest
@@ -24,21 +9,21 @@ import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.location.Address
-import android.location.Geocoder
 import android.location.Location
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.material.snackbar.Snackbar
-import java.util.Locale
 
 private const val TAG = "MainActivity"
 private const val REQUEST_FOREGROUND_ONLY_PERMISSIONS_REQUEST_CODE = 34
@@ -77,7 +62,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.activity_main)
 
         foregroundOnlyBroadcastReceiver = ForegroundOnlyBroadcastReceiver()
@@ -88,23 +72,6 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
         foregroundOnlyLocationButton = findViewById(R.id.foreground_only_location_button)
         outputTextView = findViewById(R.id.output_text_view)
         textViewAddress = findViewById(R.id.textViewAddress)
-
-        foregroundOnlyLocationButton.setOnClickListener {
-            val enabled = sharedPreferences.getBoolean(
-                SharedPreferenceUtil.KEY_FOREGROUND_ENABLED, false)
-
-            if (enabled) {
-                foregroundOnlyLocationService?.unsubscribeToLocationUpdates()
-            } else {
-
-                if (foregroundPermissionApproved()) {
-                    foregroundOnlyLocationService?.subscribeToLocationUpdates()
-                        ?: Log.d(TAG, "Service Not Bound")
-                } else {
-                    requestForegroundPermissions()
-                }
-            }
-        }
     }
 
     override fun onStart() {
@@ -126,6 +93,41 @@ class MainActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceCh
             IntentFilter(
                 ForegroundOnlyLocationService.ACTION_FOREGROUND_ONLY_LOCATION_BROADCAST)
         )
+        Handler(Looper.getMainLooper()).postDelayed({
+            someFunction()
+        },5000)
+    }
+    private fun someFunction(){
+            val enabled = sharedPreferences.getBoolean(
+                SharedPreferenceUtil.KEY_FOREGROUND_ENABLED, false)
+
+            if (enabled) {
+                foregroundOnlyLocationService?.unsubscribeToLocationUpdates()
+            } else {
+
+                if (foregroundPermissionApproved()) {
+                    foregroundOnlyLocationService?.subscribeToLocationUpdates()
+                        ?: Log.d(TAG, "Service Not Bound")
+                } else {
+                    requestForegroundPermissions()
+                }
+            }
+
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopForegroundOnlyLocationService()
+    }
+
+    private fun stopForegroundOnlyLocationService() {
+        if (foregroundOnlyLocationServiceBound) {
+            unbindService(foregroundOnlyServiceConnection)
+            foregroundOnlyLocationServiceBound = false
+        }
+        val serviceIntent = Intent(this, ForegroundOnlyLocationService::class.java)
+        stopService(serviceIntent)
+        Log.d(TAG, "ForegroundOnlyLocationService stopped.")
     }
 
     override fun onPause() {

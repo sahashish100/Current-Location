@@ -55,8 +55,8 @@ class ForegroundOnlyLocationService : Service() {
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
         locationRequest = LocationRequest.create().apply {
-            interval = TimeUnit.SECONDS.toMillis(60)
-            fastestInterval = TimeUnit.SECONDS.toMillis(30)
+            interval =   5000//TimeUnit.SECONDS.toMillis(60)
+            fastestInterval = 5000//TimeUnit.SECONDS.toMillis(30)
             maxWaitTime = TimeUnit.MINUTES.toMillis(2)
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             smallestDisplacement = 100f
@@ -179,15 +179,15 @@ class ForegroundOnlyLocationService : Service() {
     override fun onDestroy() {
         super.onDestroy()
 
-        if(!isAppRunningInForeground()) {
-            stopForeground(true)
-            stopSelf()
-        }
-        Log.d(TAG, "onDestroy()")
-    }
-
-    private fun isAppRunningInForeground(): Boolean{
-        return true
+//        if(!isAppRunningInForeground()) {
+//            stopForeground(true)
+//            stopSelf()
+//        }
+//        Log.d(TAG, "onDestroy()")
+//    }
+//
+//    private fun isAppRunningInForeground(): Boolean{
+//        return true
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
